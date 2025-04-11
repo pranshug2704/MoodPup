@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { analyzeEmotion, Emotion } from '../utils/emotionAnalyzer';
 
 interface MoodInputProps {
@@ -18,20 +19,25 @@ const MoodInput: React.FC<MoodInputProps> = ({ onEmotionDetected }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-md p-4">
+    <form onSubmit={handleSubmit} className="w-full max-w-md space-y-4">
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="How are you feeling today?"
-        rows={4}
-        className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 mb-4 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+        placeholder="Type how you feel... 🐶"
+        rows={3}
+        className="w-full p-3 border border-gray-200 rounded-xl shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand_teal/60 focus:border-transparent resize-none placeholder-gray-400 text-gray-700 transition-shadow duration-200 focus:shadow-md"
       />
-      <button
+      <motion.button
         type="submit"
-        className="w-full px-4 py-2 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:bg-blue-600 dark:hover:bg-blue-700"
+        className="w-full px-6 py-3 bg-brand_teal text-white font-semibold text-lg rounded-xl shadow hover:bg-teal-500 focus:outline-none focus:ring-2 focus:ring-brand_teal focus:ring-offset-2 flex items-center justify-center space-x-2 disabled:opacity-50"
+        disabled={!text.trim()}
+        whileHover={{ scale: text.trim() ? 1.03 : 1 }}
+        whileTap={{ scale: text.trim() ? 0.97 : 1 }}
+        transition={{ type: "spring", stiffness: 500, damping: 15 }}
       >
-        Tell MoodPup
-      </button>
+        <span>Tell MoodPup</span>
+        <span>🐾</span>
+      </motion.button>
     </form>
   );
 };
