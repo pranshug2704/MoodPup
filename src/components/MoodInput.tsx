@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, KeyboardEvent } from 'react';
 import { motion } from 'framer-motion';
 import { analyzeEmotion, Emotion } from '../utils/emotionAnalyzer';
 
@@ -9,31 +9,53 @@ interface MoodInputProps {
 const MoodInput: React.FC<MoodInputProps> = ({ onEmotionDetected }) => {
   const [text, setText] = useState('');
 
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!text.trim()) return; // Don't submit empty input
-
+  const triggerSubmit = () => {
+    if (!text.trim()) return;
     const detectedEmotion = analyzeEmotion(text);
     onEmotionDetected(detectedEmotion, text);
-    setText(''); // Clear the input after submission
+    setText('');
+  };
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    triggerSubmit();
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      triggerSubmit();
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-md space-y-4">
+    <form onSubmit={handleSubmit}>
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Type how you feel... 🐶"
+        onKeyDown={handleKeyDown}
+        placeholder="How do you feel?"
         rows={3}
-        className="w-full p-3 border border-gray-200 rounded-xl shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand_teal/60 focus:border-transparent resize-none placeholder-gray-400 text-gray-700 transition-shadow duration-200 focus:shadow-md"
+        style={{ width: '100%', marginBottom: '1rem', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '0.5rem' }}
       />
       <motion.button
         type="submit"
-        className="w-full px-6 py-3 bg-brand_teal text-white font-semibold text-lg rounded-xl shadow hover:bg-teal-500 focus:outline-none focus:ring-2 focus:ring-brand_teal focus:ring-offset-2 flex items-center justify-center space-x-2 disabled:opacity-50"
         disabled={!text.trim()}
         whileHover={{ scale: text.trim() ? 1.03 : 1 }}
         whileTap={{ scale: text.trim() ? 0.97 : 1 }}
         transition={{ type: "spring", stiffness: 500, damping: 15 }}
+        style={{
+          width: '100%', 
+          padding: '0.75rem 1.5rem', 
+          background: '#0d9488',
+          color: 'white', 
+          border: 'none', 
+          borderRadius: '0.75rem', 
+          cursor: 'pointer',
+          fontWeight: 600,
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+          opacity: !text.trim() ? 0.6 : 1,
+        }}
       >
         <span>Tell MoodPup</span>
         <span>🐾</span>
