@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+/** @jsxImportSource @emotion/react */
+import { useState, useEffect, useCallback } from 'react';
+import styled from '@emotion/styled';
 import DogDisplay from '../components/DogDisplay';
 import MoodInput from '../components/MoodInput';
 import MoodHistoryGraph from '../components/MoodHistory';
@@ -7,117 +9,129 @@ import { useMoodHistory } from '../hooks/useMoodHistory';
 import { useDogCustomization } from '../hooks/useDogCustomization';
 import { Emotion } from '../utils/emotionAnalyzer';
 
+// Helper function for dynamic background color based on breed
+const getBackgroundColorForBreed = (breed: DogCustomization['breed']): string => {
+  switch (breed) {
+    case 'Golden Retriever': return '#fdf6e3'; // Soft Hazel/Beige
+    case 'Shiba': return '#ffe4c4'; // Soft Orange/Bisque
+    case 'Husky': return '#e0f2fe'; // Soft Light Blue/Gray
+    case 'Poodle': return '#fff5f7'; // Soft Pink/Lavender Blush
+    default: return '#f8fafc'; // Default light gray (slate-50)
+  }
+};
+
+// Define styled components
+// Pass customization prop for dynamic styling
+const MainContainer = styled.div<{ customization: DogCustomization }>`
+  display: flex;
+  min-height: 100vh;
+  position: relative;
+  background-color: ${props => {
+    const breed = props.customization.breed;
+    const color = getBackgroundColorForBreed(breed);
+    console.log(`[MainContainer] Breed: ${breed}, Calculated BG Color: ${color}`); // DEBUG
+    return color;
+  }};
+  /* background-color: magenta; */ /* Remove debug color */
+  transition: background-color 0.3s ease;
+`;
+
+const LeftPanel = styled.div<{ customization: DogCustomization }>`
+  flex-shrink: 0;
+  background-color: ${props => getBackgroundColorForBreed(props.customization.breed)}; 
+  /* Ensure DogCustomizer internal bg doesn't conflict or set it transparent */
+  transition: background-color 0.3s ease;
+`;
+
+const CenterPanel = styled.div<{ customization: DogCustomization }>`
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: ${props => getBackgroundColorForBreed(props.customization.breed)};
+  transition: background-color 0.3s ease;
+`;
+
+const TopCenterSection = styled.div`
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+`;
+
+const DogDisplayWrapper = styled.div`
+  /* Add specific styles if needed */
+`;
+
+const BottomGraphSection = styled.div`
+  width: 100%;
+  height: 120px;
+  box-sizing: border-box;
+  position: relative;
+`;
+
+const RightInputPanel = styled.div<{ customization: DogCustomization }>`
+  position: fixed;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 250px;
+  padding: 1rem;
+  /* Adjust background based on main color for contrast/harmony */
+  background: rgba(255, 255, 255, 0.6); /* Slightly more transparent white */
+  backdrop-filter: blur(5px);
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  z-index: 10;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+`;
+
 const MoodPupMain: React.FC = () => {
   const [currentEmotion, setCurrentEmotion] = useState<Emotion>('neutral');
-  const [reactionTrigger, setReactionTrigger] = useState(0);
   const { moodHistory, addMoodEntry } = useMoodHistory();
   const { customization, updateCustomization } = useDogCustomization();
 
-  const handleEmotionDetected = (emotion: Emotion, text: string) => {
+  const handleEmotionDetected = useCallback((emotion: Emotion, text: string) => {
     setCurrentEmotion(emotion);
     addMoodEntry({ text, emotion });
-    setReactionTrigger(prev => prev + 1);
-  };
+  }, [addMoodEntry]);
 
-  const handleCustomizeUpdate = (newCustomization: DogCustomization) => {
+  const handleCustomizeUpdate = useCallback((newCustomization: DogCustomization) => {
+    console.log('[MoodPupMain] handleCustomizeUpdate called:', newCustomization);
     updateCustomization(newCustomization);
-  };
-
-  // Unified background color
-  const unifiedBgColor = '#f8fafc'; // Example: Very light gray (Tailwind slate-50)
-
-  const mainStyle: React.CSSProperties = {
-    display: 'flex',
-    minHeight: '100vh',
-    position: 'relative', 
-    backgroundColor: unifiedBgColor, // Apply unified background
-  };
-
-  const leftPanelStyle: React.CSSProperties = {
-    flexShrink: 0,
-    backgroundColor: unifiedBgColor, // Apply unified background
-    // Note: DogCustomizer itself might have its own background set internally, needs checking/overriding if necessary
-  };
-
-  const centerPanelStyle: React.CSSProperties = {
-    flexGrow: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    backgroundColor: unifiedBgColor, // Apply unified background
-  };
-
-  const topCenterStyle: React.CSSProperties = {
-    flexGrow: 1, 
-    display: 'flex',
-    alignItems: 'center', 
-    justifyContent: 'center', // Just center the dog display now
-    padding: '2rem',
-    // Removed gap
-  };
-
-  const dogDisplayContainerStyle: React.CSSProperties = {
-    // No changes needed
-  };
-
-  // Styles for the input container fixed to the right
-  const moodInputContainerStyle: React.CSSProperties = {
-    position: 'fixed',
-    right: '1.5rem', 
-    top: '50%',
-    transform: 'translateY(-50%)',
-    width: '250px',
-    padding: '1rem',
-    background: 'rgba(241, 245, 249, 0.8)', // Match unified background (slate-100) with slight transparency
-    backdropFilter: 'blur(4px)',
-    borderRadius: '0.75rem', 
-    boxShadow: '0 2px 10px rgba(0,0,0,0.08)', 
-    zIndex: 10,
-  };
-
-  const bottomGraphStyle: React.CSSProperties = {
-    width: '100%',
-    height: '120px',
-    padding: '0',
-    boxSizing: 'border-box',
-    position: 'relative',
-    // No background set here - graph component handles its own gradient
-  };
+  }, [updateCustomization]);
 
   return (
-    <div style={mainStyle}>
-      {/* Left Panel */}
-      <div style={leftPanelStyle}>
+    <MainContainer customization={customization}>
+      <LeftPanel customization={customization}>
         <DogCustomizer
           onCustomize={handleCustomizeUpdate}
           initialCustomization={customization}
         />
-      </div>
+      </LeftPanel>
 
-      {/* Center Panel (Dog + Graph) */} 
-      <div style={centerPanelStyle}>
-        {/* Top section (Pup ONLY) */}
-        <div style={topCenterStyle}>
-          <div style={dogDisplayContainerStyle}>
-            <DogDisplay 
-              emotion={currentEmotion} 
-              customization={customization} 
-              reactionTrigger={reactionTrigger} 
+      <CenterPanel customization={customization}>
+        <TopCenterSection>
+          <DogDisplayWrapper>
+            <DogDisplay
+              emotion={currentEmotion}
+              customization={customization}
             />
-          </div>
-          {/* MoodInput is now positioned absolutely */} 
-        </div>
-        
-        {/* Bottom section (Graph) */}
-        <div style={bottomGraphStyle}>
-          <MoodHistoryGraph moodHistory={moodHistory} />
-        </div>
-      </div>
+          </DogDisplayWrapper>
+        </TopCenterSection>
 
-      {/* Right Input Panel (Positioned Absolutely) */}
-      <div style={moodInputContainerStyle}>
-        <MoodInput onEmotionDetected={handleEmotionDetected} />
-      </div>
-    </div>
+        <BottomGraphSection>
+          <MoodHistoryGraph moodHistory={moodHistory} />
+        </BottomGraphSection>
+      </CenterPanel>
+
+      <RightInputPanel customization={customization}>
+        <MoodInput 
+            onEmotionDetected={handleEmotionDetected} 
+            customization={customization} 
+        />
+      </RightInputPanel>
+    </MainContainer>
   );
 };
 

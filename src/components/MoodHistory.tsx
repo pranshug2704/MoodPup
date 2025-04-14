@@ -1,5 +1,7 @@
-import React, { useRef } from 'react';
+/** @jsxImportSource @emotion/react */
+import { useRef } from 'react';
 import { motion } from 'framer-motion';
+import styled from '@emotion/styled';
 import { MoodEntry } from '../hooks/useMoodHistory';
 import { Emotion } from '../utils/emotionAnalyzer';
 
@@ -16,6 +18,78 @@ const emotionScores: Record<Emotion, number> = {
   anxious: -1,
   sad: -2,
 };
+
+// Styled Components
+const GraphOuterContainer = styled.div`
+  width: 100%;
+  height: 100%;
+`;
+
+const PlaceholderContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: #9ca3af; // gray-400
+  font-size: 0.875rem;
+`;
+
+const ScrollContainer = styled.div`
+  overflow-x: auto;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(16, 185, 129, 0.05), rgba(254, 249, 195, 0.05), rgba(239, 68, 68, 0.05));
+  /* Remove other styles like border, padding, etc., if needed for seamless */
+  /* Custom scrollbar styling (optional, browser-specific) */
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.15);
+    border-radius: 6px;
+  }
+`;
+
+const SVGWrapper = styled.div<{ width: number; padding: number }>`
+  width: ${props => props.width}px;
+  height: 100%;
+  padding: 0 ${props => props.padding}px;
+  box-sizing: border-box;
+`;
+
+const StyledSVG = styled.svg`
+  display: block;
+  width: 100%;
+  height: 100%;
+`;
+
+const GuideLine = styled.line`
+  stroke: #9ca3af; // gray-400
+  stroke-width: 1;
+  stroke-dasharray: 2, 3;
+`;
+
+const MoodPath = styled(motion.path)`
+  fill: none;
+  stroke: #4b5563; // gray-600
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+`;
+
+const PointCircle = styled(motion.circle)<{ pointColor: string }>`
+  fill: white;
+  stroke: ${props => props.pointColor};
+  stroke-width: 1.5;
+`;
+
+const PointText = styled(motion.text)<{ pointColor: string }>`
+  fill: ${props => props.pointColor};
+  font-size: 8px;
+  text-anchor: middle;
+`;
 
 const MoodHistoryGraph: React.FC<MoodHistoryProps> = ({ moodHistory }) => {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -47,84 +121,59 @@ const MoodHistoryGraph: React.FC<MoodHistoryProps> = ({ moodHistory }) => {
   });
 
   const pathData = points.map((p, i) => (i === 0 ? 'M' : 'L') + `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  const neutralLineY = height - padding - ((-minScore / scoreRange) * (height - 2 * padding));
 
   return (
-    // Outer container takes full width, remove ref if not used
-    <div style={{ width: '100%', height: '100%' /* Occupy full height of parent */ }}>
-      {/* Removed H2 title */}
+    <GraphOuterContainer>
       {plottedHistory.length < 2 ? (
-        // Keep placeholder centered vertically+horizontally if possible
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#9ca3af', fontSize: '0.875rem' }}>
+        <PlaceholderContainer>
           <p>Mood trend appears here...</p>
-        </div>
+        </PlaceholderContainer>
       ) : (
-        // Scrollable container for the SVG, full height, less obvious styling
-        <div style={{
-          overflowX: 'auto',
-          height: '100%', // Take full height of parent
-          background: 'linear-gradient(to bottom, rgba(16, 185, 129, 0.05), rgba(254, 249, 195, 0.05), rgba(239, 68, 68, 0.05))', // Subtler gradient
-          // Remove border/shadow/padding for seamless look
-        }}>
-          {/* SVG container div */}
-          <div style={{ width: `${width}px`, height: '100%', padding: `0 ${padding}px`, boxSizing: 'border-box' }}>
-            <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block', width: '100%', height: '100%' }}>
-              {/* Horizontal line */}
-              <line x1={padding} y1={height - padding - ((-minScore / scoreRange) * (height - 2 * padding))} x2={width - padding} y2={height - padding - ((-minScore / scoreRange) * (height - 2 * padding))} stroke="#9ca3af" strokeWidth="1" strokeDasharray="2,3" /> 
-              
-              {/* Mood line path */}
+        <ScrollContainer>
+          <SVGWrapper width={width} padding={padding}>
+            <StyledSVG ref={svgRef} viewBox={`0 0 ${width} ${height}`}>
               {pathData && (
-                <motion.path
+                <MoodPath
                   d={pathData}
-                  fill="none"
-                  stroke="#4b5563" // Darker gray line
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
                   initial={{ pathLength: 0 }}
                   animate={{ pathLength: 1 }}
                   transition={{ duration: 1.5, ease: "easeInOut" }}
                 />
               )}
-
-              {/* Data points and Text Labels */}
               {points.map((point, index) => {
                 const color = point.score > 0 ? '#10b981' : point.score < 0 ? '#ef4444' : '#6b7280';
                 const isPositive = point.score > 0;
-                const textYOffset = isPositive ? -8 : 14; // Adjusted offset for smaller size
-                
+                const textYOffset = isPositive ? -8 : 14;
                 return (
                   <g key={index}>
-                    <motion.circle
+                    <PointCircle
+                      pointColor={color}
                       cx={point.x}
                       cy={point.y}
-                      r="4" // Slightly smaller points
-                      fill="white"
-                      stroke={color}
-                      strokeWidth="1.5"
+                      r="4"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ duration: 0.5, delay: index * 0.1, type: 'spring', stiffness: 300 }}
                     />
-                    <motion.text
+                    <PointText
+                      pointColor={color}
                       x={point.x}
                       y={point.y + textYOffset}
-                      fill={color}
-                      fontSize="8" // Smaller font size
-                      textAnchor="middle"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.5, delay: index * 0.15 }}
                     >
                       {point.emotion}
-                    </motion.text>
+                    </PointText>
                   </g>
                 );
               })}
-            </svg>
-          </div>
-        </div>
+            </StyledSVG>
+          </SVGWrapper>
+        </ScrollContainer>
       )}
-    </div>
+    </GraphOuterContainer>
   );
 };
 

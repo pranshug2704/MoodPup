@@ -7,7 +7,7 @@ const LOCAL_STORAGE_KEY = 'dogCustomization';
 const defaultCustomization: DogCustomization = {
   name: 'MoodPup',
   breed: 'Shiba',
-  color: 'light',
+  color: '#ec4899', // Default to Pink-500
   accessories: [],
 };
 
@@ -16,26 +16,36 @@ export function useDogCustomization() {
     // Initialize state from localStorage or use default
     try {
       const storedItem = localStorage.getItem(LOCAL_STORAGE_KEY);
-      return storedItem ? JSON.parse(storedItem) : defaultCustomization;
+      if (storedItem) {
+        const parsed = JSON.parse(storedItem);
+        // Basic validation: Ensure color is a string (might be old 'light'/'medium'/'dark')
+        if (typeof parsed.color !== 'string' || !parsed.color.startsWith('#')) {
+           parsed.color = defaultCustomization.color; // Reset to default hex if invalid
+        }
+        return parsed;
+      } 
+      return defaultCustomization;
     } catch (error) {
       console.error("Error reading dog customization from localStorage:", error);
       return defaultCustomization;
     }
   });
 
-  // Persist state to localStorage whenever it changes
+  // Provide a stable function to update the customization
+  const updateCustomization = useCallback((newCustomization: DogCustomization) => {
+    console.log('[useDogCustomization] updateCustomization called, setting new state:', newCustomization);
+    setCustomization(newCustomization);
+  }, []);
+
+  // Log when the customization state itself changes (after setCustomization)
   useEffect(() => {
+    console.log('[useDogCustomization] Customization state updated:', customization);
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(customization));
     } catch (error) {
       console.error("Error saving dog customization to localStorage:", error);
     }
   }, [customization]);
-
-  // Provide a stable function to update the customization
-  const updateCustomization = useCallback((newCustomization: DogCustomization) => {
-    setCustomization(newCustomization);
-  }, []);
 
   return { customization, updateCustomization };
 } 
