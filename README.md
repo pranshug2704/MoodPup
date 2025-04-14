@@ -1,54 +1,55 @@
-# React + TypeScript + Vite
+# MoodPup 🐾
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A simple web application where you can track your mood and see it reflected in a customizable digital pet!
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+*   **Mood Tracking:** Enter text describing how you feel.
+*   **Emotion Analysis:** Basic sentiment analysis determines the mood (happy, sad, excited, calm, anxious, neutral).
+*   **Digital Pet Display:** A customizable dog emoji reflects the current mood.
+*   **Customization:** Change the dog's name, breed, accessories, and accent color via a side panel.
+*   **Mood History:** View a simple, horizontally scrollable graph visualizing mood trends over time.
+*   **Animation:** Basic idle animation for the selected dog breed and reaction animation on mood input.
+*   **Persistence:** Customization settings are saved in `localStorage`.
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+*   **Framework:** React
+*   **Build Tool:** Vite
+*   **Language:** TypeScript
+*   **Styling:** Emotion (CSS-in-JS)
+*   **Animation:** Framer Motion
+*   **Sentiment Analysis:** `sentiment` library
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+## Setup and Running
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/pranshug2704/MoodPup.git
+    cd MoodPup
+    ```
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+3.  **Run the development server:**
+    ```bash
+    npm run dev
+    ```
+    The application should be available at `http://localhost:5173` (or another port if 5173 is busy).
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Important Note on Environment
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+During development, we encountered persistent build issues related to CSS processing (specifically involving PostCSS and attempts to process Tailwind CSS even after removal). These issues were resolved by ensuring a clean environment and potentially relate to Node.js version compatibility.
+
+It is strongly recommended to use a **Node.js LTS (Long-Term Support)** version (e.g., v20.x as of early 2025) for the most stable experience. If you encounter build errors, try:
+
+*   Ensuring you are on an LTS Node version (use `nvm` to manage versions).
+*   Performing a very clean install: `rm -rf node_modules && rm -f package-lock.json && npm cache clean --force && npm install`.
+
+## Development
+
+*   The main application logic is in `src/pages/MoodPupMain.tsx`.
+*   Reusable UI elements are in `src/components/`.
+*   State management hooks are in `src/hooks/`.
+*   Utility functions (like emotion analysis) are in `src/utils/`.
