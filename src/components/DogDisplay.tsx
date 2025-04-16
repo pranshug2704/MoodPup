@@ -1,24 +1,58 @@
 /** @jsxImportSource @emotion/react */
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styled from '@emotion/styled';
 import { DogCustomization } from './DogCustomizer';
 import { Emotion } from '../utils/emotionAnalyzer';
+
+// Import PNG Images (Vite returns the URL)
+import shibaImageUrl from '../assets/Shiba.png';
+import retrieverImageUrl from '../assets/Retriever.png';
+import huskyImageUrl from '../assets/Husky.png';
+import poodleImageUrl from '../assets/Poodle.png';
+import bandanaImageUrl from '../assets/Bandana.png';
+import glassesImageUrl from '../assets/Glasses.png';
+import hatImageUrl from '../assets/Hat.png';
+import bowtieImageUrl from '../assets/Bowtie.png';
+// Add a default/fallback image import if desired
+// import defaultDogImageUrl from '../assets/DefaultDog.png';
 
 interface DogDisplayProps {
   emotion: Emotion;
   customization: DogCustomization;
 }
 
-// Define simple emoji sequences for "idle" animation
-const idleAnimationFrames: Record<DogCustomization['breed'], string[]> = {
-  Shiba: ['🦊', '🦊✨'],
-  'Golden Retriever': ['🐕', '🐕‍🦺'], // Using guide dog as alternate frame
-  Husky: ['🐺', '🐺💤'], // Using sleeping face
-  Poodle: ['🐩', '🐩🎀'], // Adding a bow
+// Map breed names to PNG image URLs
+const breedImageMap: Record<DogCustomization['breed'], string> = {
+  Shiba: shibaImageUrl,
+  'Golden Retriever': retrieverImageUrl,
+  Husky: huskyImageUrl,
+  Poodle: poodleImageUrl,
 };
 
-// Styled Components
+// Map accessory names to PNG image URLs
+const accessoryImageMap: Record<string, string> = {
+  bandana: bandanaImageUrl,
+  glasses: glassesImageUrl,
+  hat: hatImageUrl,
+  bow_tie: bowtieImageUrl,
+};
+
+// --- Helper Functions ---
+
+// ** EDIT THESE OFFSETS FOR PRECISION **
+// Returns { x: pixelOffset, y: pixelOffset }
+const getBreedOffset = (breed: DogCustomization['breed']) => {
+  switch (breed) {
+    case 'Golden Retriever': return { x: -89, y: -80 }; // Assume this is the reference
+    case 'Shiba': return { x: -86, y: -90 }; // Example: Move slightly right, slightly up
+    case 'Husky': return { x: -72, y: -90 }; // Example: Move slightly down
+    case 'Poodle': return { x: -75, y: -90 }; // Example: Move slightly left, slightly up
+    default: return { x: 0, y: 0 };
+  }
+};
+
+// --- Styled Components ---
 const DisplayContainer = styled.div`
   padding: 1.5rem;
   background-color: #f0f9ff;
@@ -36,87 +70,186 @@ const DogName = styled.p`
   color: #374151;
 `;
 
-const EmojiFrame = styled.div`
-  width: 160px;
-  height: 160px;
-  border-radius: 50%;
-  background: linear-gradient(to bottom right, white, #f3f4f6);
+// Rename SvgFrame -> ImageFrame
+const ImageFrame = styled.div`
+  position: relative;
+  width: 180px;
+  height: 180px;
   margin: 0 auto 0.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
-  border: 2px solid white;
-  overflow: hidden;
 `;
 
-const EmojiSpan = styled(motion.span)`
-  font-size: 5rem;
-  display: inline-block;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
-`;
-
-// Helper to get emotion modifier (simple for now)
-const getEmotionModifier = (emotion: Emotion): string => {
-  switch (emotion) {
-    case 'happy': return '😊';
-    case 'sad': return '😢';
-    case 'excited': return '🤩';
-    case 'calm': return '😌';
-    case 'anxious': return '😟';
-    default: return '😐'; // Neutral
+// Apply breed-specific offset via positioning
+const BaseImageWrapper = styled(motion.div)<{ breed: DogCustomization['breed'] }>`
+  position: absolute; /* Use absolute positioning */
+  width: 100%; /* Adjust as needed */
+  height: 100%; /* Adjust as needed */
+  /* Remove flex centering */
+  /* display: flex; */
+  /* align-items: center; */
+  /* justify-content: center; */
+  /* Transform removed */
+  img {
+    display: block;
+    position: absolute; /* Allow positioning img within wrapper */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Center image itself */
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
   }
-};
+`;
 
-// Helper to add accessory emojis
-const applyAccessories = (base: string, accessories: string[]): string => {
-  let final = base;
-  if (accessories.includes('glasses')) final += '🕶️';
-  if (accessories.includes('hat')) final += '🤠'; // Example hat
-  if (accessories.includes('bandana')) final += '🧣'; // Example bandana
-  if (accessories.includes('bow_tie')) final += '🎀'; // Example bow tie
-  return final;
-};
+// Remove Generic AccessoryImageWrapper
+// const AccessoryImageWrapper = styled(motion.div)` ... `;
+
+// --- Accessory-Specific Styled Wrappers --- 
+// Base styles for all accessory wrappers
+const AccessoryWrapperBase = styled(motion.div)`
+  position: absolute;
+  pointer-events: none; // Allow clicks through to base image if needed
+  display: flex; 
+  align-items: center;
+  justify-content: center;
+  img {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+`;
+
+// ** EDIT THESE VALUES FOR PRECISION **
+const HatWrapper = styled(AccessoryWrapperBase)`
+  width: 50%; // Example size
+  height: auto;
+  top: -12%; // Example position
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3; 
+`;
+
+const GlassesWrapper = styled(AccessoryWrapperBase)`
+  width: 60%;
+  height: auto;
+  top: 35%; 
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+`;
+
+// Update BandanaWrapper to accept breed and adjust size
+const BandanaWrapper = styled(AccessoryWrapperBase)<{ breed: DogCustomization['breed'] }>`
+  /* Base size for Shiba/Husky */
+  width: 70%; 
+  height: auto;
+  bottom: 10%;
+  left: 47%;
+  transform: translateX(-50%);
+  z-index: 1;
+
+  /* Adjust size for specific breeds */
+  ${props => (props.breed === 'Poodle' || props.breed === 'Golden Retriever') && `
+    width: 60%; /* Make slightly smaller for Poodle/Retriever */
+    /* Alternatively, could use transform: scale(0.9); */
+    /* Adjust position slightly if needed due to size change */
+    /* bottom: 11%; */ 
+    /* left: 39%; */
+  `}
+`;
+
+const BowtieWrapper = styled(AccessoryWrapperBase)`
+  width: 30%;
+  height: auto;
+  bottom: 30%; 
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+`;
+// --- End Accessory-Specific Wrappers --- 
 
 const DogDisplay: React.FC<DogDisplayProps> = ({ emotion, customization }) => {
-  const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
-
-  // Effect to cycle through animation frames
-  useEffect(() => {
-    const frames = idleAnimationFrames[customization.breed] || ['🐶']; // Default generic dog
-    const intervalId = setInterval(() => {
-      setCurrentFrameIndex(prevIndex => (prevIndex + 1) % frames.length);
-    }, 1500); // Change frame every 1.5 seconds
-
-    // Cleanup: clear interval when component unmounts or breed changes
-    return () => clearInterval(intervalId);
-  }, [customization.breed]); // Re-run effect only if breed changes
-
-  // Get the current base emoji frame for the animation
-  const baseAvatar = (idleAnimationFrames[customization.breed] || ['🐶'])[currentFrameIndex];
-
-  const emotionModifier = getEmotionModifier(emotion);
-  const emotionalAvatar = `${baseAvatar}${emotionModifier}`;
-  const finalAvatar = applyAccessories(emotionalAvatar, customization.accessories);
+  const breedImageUrl = breedImageMap[customization.breed] || shibaImageUrl;
+  
+  // Calculate offset for top/left style
+  const offset = getBreedOffset(customization.breed);
+  // Start from center (50%) and apply pixel offset
+  // Note: Calculating percentage offset might be complex, pixel is simpler here
+  const positionStyle = {
+      top: `calc(50% + ${offset.y}px)`,
+      left: `calc(50% + ${offset.x}px)`,
+      // Transform needed to re-center the element itself after top/left shift
+      transform: `translate(-50%, -50%)` 
+  };
 
   return (
     <DisplayContainer>
-      <DogName>
-        {customization.name}
-      </DogName>
-      <EmojiFrame>
-        <AnimatePresence mode="wait">
-          <EmojiSpan
-            key={finalAvatar}
+      <DogName>{customization.name}</DogName>
+      <ImageFrame>
+        <AnimatePresence>
+          <BaseImageWrapper
+            key={customization.breed} 
+            breed={customization.breed} 
+            // Apply top/left via style prop, remove transform style
+            style={positionStyle}
+            // Keep animation props for opacity/scale
             initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
+            animate={{ 
+                opacity: 1, 
+                scale: 1,
+            }}
             exit={{ opacity: 0, scale: 0.7 }}
             transition={{ duration: 0.4, ease: "backOut" }}
           >
-            {finalAvatar}
-          </EmojiSpan>
+            {/* Image is now positioned by its own styles within wrapper */}
+            <img src={breedImageUrl} alt={customization.breed} />
+          </BaseImageWrapper>
         </AnimatePresence>
-      </EmojiFrame>
+
+        {/* Accessories - Render specific wrappers */}
+        {customization.accessories.map(accKey => {
+          const accessoryImageUrl = accessoryImageMap[accKey];
+          if (!accessoryImageUrl) return null; 
+          
+          let WrapperComponent: React.ComponentType<any>; // Need a type that accepts props
+          let additionalProps: any = {}; // Object to hold extra props like breed
+
+          switch (accKey) {
+            case 'hat': 
+              WrapperComponent = HatWrapper; 
+              break;
+            case 'glasses': 
+              WrapperComponent = GlassesWrapper; 
+              break;
+            case 'bandana': 
+              WrapperComponent = BandanaWrapper; 
+              // Pass the breed specifically to BandanaWrapper
+              additionalProps = { breed: customization.breed }; 
+              break;
+            case 'bow_tie': 
+              WrapperComponent = BowtieWrapper; 
+              break;
+            default: return null;
+          }
+
+          return (
+            <AnimatePresence key={`${customization.breed}-${accKey}`}>
+              <WrapperComponent
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                {...additionalProps} // Spread additional props (e.g., breed for bandana)
+              >
+                <img src={accessoryImageUrl} alt={accKey} />
+              </WrapperComponent>
+            </AnimatePresence>
+          );
+        })}
+      </ImageFrame>
     </DisplayContainer>
   );
 };

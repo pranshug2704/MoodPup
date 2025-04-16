@@ -61,6 +61,8 @@ const TopCenterSection = styled.div`
 
 const DogDisplayWrapper = styled.div`
   /* Add specific styles if needed */
+  /* Shift removed - dog position handled internally now */
+  /* transform: translateX(-15px); */ 
 `;
 
 const BottomGraphSection = styled.div`
@@ -77,8 +79,7 @@ const RightInputPanel = styled.div<{ customization: DogCustomization }>`
   transform: translateY(-50%);
   width: 250px;
   padding: 1rem;
-  /* Adjust background based on main color for contrast/harmony */
-  background: rgba(255, 255, 255, 0.6); /* Slightly more transparent white */
+  background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(5px);
   border-radius: 0.75rem;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
@@ -97,7 +98,7 @@ const MoodPupMain: React.FC = () => {
   }, [addMoodEntry]);
 
   const handleCustomizeUpdate = useCallback((newCustomization: DogCustomization) => {
-    console.log('[MoodPupMain] handleCustomizeUpdate called:', newCustomization);
+    // console.log('[MoodPupMain] handleCustomizeUpdate called:', newCustomization);
     updateCustomization(newCustomization);
   }, [updateCustomization]);
 
@@ -135,4 +136,4 @@ const MoodPupMain: React.FC = () => {
   );
 };
 
-export default MoodPupMain; 
+export default MoodPupMain;
