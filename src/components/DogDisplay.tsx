@@ -3,7 +3,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styled from '@emotion/styled';
 import { DogCustomization } from './DogCustomizer';
-import { Emotion } from '../utils/emotionAnalyzer';
+// import { Emotion } from '../utils/emotionAnalyzer'; // Remove unused import
 
 // Import PNG Images (Vite returns the URL)
 import shibaImageUrl from '../assets/Shiba.png';

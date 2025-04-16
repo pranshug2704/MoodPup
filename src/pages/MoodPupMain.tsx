@@ -160,7 +160,6 @@ const MoodPupMain: React.FC = () => {
         <TopCenterSection>
           <DogDisplayWrapper>
             <DogDisplay
-              emotion={currentEmotion}
               customization={customization}
               showBubble={showBubble}
               bubbleText={bubbleText}
