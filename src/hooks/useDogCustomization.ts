@@ -3,12 +3,13 @@ import { DogCustomization } from '../components/DogCustomizer';
 
 const LOCAL_STORAGE_KEY = 'dogCustomization';
 
-// Default customization if nothing is found in localStorage
+// Default customization includes background
 const defaultCustomization: DogCustomization = {
   name: 'MoodPup',
   breed: 'Shiba',
   color: '#ec4899', // Default to Pink-500
   accessories: [],
+  background: 'park_day', // Default background identifier
 };
 
 export function useDogCustomization() {
@@ -21,6 +22,10 @@ export function useDogCustomization() {
         // Basic validation: Ensure color is a string (might be old 'light'/'medium'/'dark')
         if (typeof parsed.color !== 'string' || !parsed.color.startsWith('#')) {
            parsed.color = defaultCustomization.color; // Reset to default hex if invalid
+        }
+        // Add default background if missing from older storage
+        if (typeof parsed.background !== 'string') {
+            parsed.background = defaultCustomization.background;
         }
         return parsed;
       } 

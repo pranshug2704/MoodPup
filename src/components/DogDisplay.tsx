@@ -17,6 +17,12 @@ import bowtieImageUrl from '../assets/Bowtie.png';
 // Add a default/fallback image import if desired
 // import defaultDogImageUrl from '../assets/DefaultDog.png';
 
+// Background Image Imports
+import parkImageUrl from '../assets/park_day.png';
+import roomImageUrl from '../assets/cozy_room.png';
+import starsImageUrl from '../assets/starry_night.png';
+import hillsImageUrl from '../assets/sunset_hills.png';
+
 interface DogDisplayProps {
   emotion: Emotion;
   customization: DogCustomization;
@@ -40,6 +46,14 @@ const accessoryImageMap: Record<string, string> = {
   bow_tie: bowtieImageUrl,
 };
 
+// Map background IDs to Image URLs
+const backgroundUrlMap: Record<string, string> = {
+  park_day: parkImageUrl,
+  cozy_room: roomImageUrl,
+  starry_night: starsImageUrl,
+  sunset_hills: hillsImageUrl,
+};
+
 // --- Helper Functions ---
 
 // ** EDIT THESE OFFSETS FOR PRECISION **
@@ -55,14 +69,22 @@ const getBreedOffset = (breed: DogCustomization['breed']) => {
 };
 
 // --- Styled Components ---
-const DisplayContainer = styled.div`
+const DisplayContainer = styled.div<{ backgroundId: string }>`
   padding: 1.5rem;
-  background-color: #f0f9ff;
+  /* background-color: #f0f9ff; */ /* Remove static background color */
   border-radius: 1rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  border: 2px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Slightly stronger shadow */
+  /* border: 2px solid rgba(255, 255, 255, 0.5); */ /* Remove border? */
   width: 280px;
   text-align: center;
+  position: relative;
+  overflow: hidden; /* Hide parts of bg image that extend past border-radius */
+
+  /* Apply background image */
+  background-image: url(${props => backgroundUrlMap[props.backgroundId] || parkImageUrl}); /* Default to park */
+  background-size: cover;
+  background-position: center;
+  transition: background-image 0.3s ease-in-out;
 `;
 
 const DogName = styled.p`
@@ -244,7 +266,7 @@ const DogDisplay: React.FC<DogDisplayProps> = ({
   };
 
   return (
-    <DisplayContainer>
+    <DisplayContainer backgroundId={customization.background}>
       <DogName>{customization.name}</DogName>
       <ImageFrame>
         {/* Base Image */} 

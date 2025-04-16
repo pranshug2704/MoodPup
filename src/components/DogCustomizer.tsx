@@ -3,12 +3,19 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion'; // Keep motion for buttons
 import styled from '@emotion/styled';
 
+// Import background thumbnail images
+import parkThumbUrl from '../assets/park_day.png';
+import roomThumbUrl from '../assets/cozy_room.png';
+import starsThumbUrl from '../assets/starry_night.png';
+import hillsThumbUrl from '../assets/sunset_hills.png';
+
 // Define the types for customization options
 export interface DogCustomization {
   name: string;
   breed: 'Shiba' | 'Golden Retriever' | 'Husky' | 'Poodle';
   color: string;
   accessories: string[]; // e.g., ['bandana', 'glasses']
+  background: string; // Add background identifier (e.g., 'park', 'room')
 }
 
 interface DogCustomizerProps {
@@ -26,6 +33,14 @@ const accessoryDetails: { [key: string]: { icon: string; label: string } } = {
   hat: { icon: '🤠', label: 'Hat' },
   bow_tie: { icon: '🎀', label: 'Bow Tie' },
 };
+
+// Background Options Data
+const backgroundOptions = [
+  { id: 'park_day', name: 'Park', thumb: parkThumbUrl },
+  { id: 'cozy_room', name: 'Room', thumb: roomThumbUrl },
+  { id: 'starry_night', name: 'Stars', thumb: starsThumbUrl },
+  { id: 'sunset_hills', name: 'Hills', thumb: hillsThumbUrl },
+];
 
 // Styled Components
 const PanelContainer = styled.div`
@@ -156,19 +171,59 @@ const AccessoryLabel = styled.span`
   font-weight: 500;
 `;
 
+// Styles for Background Selection
+const ThumbnailContainer = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); // 2 columns
+  gap: 0.75rem;
+`;
+
+const ThumbnailButton = styled.button<{ isActive: boolean; accentColor: string }>`
+  display: block;
+  padding: 0;
+  border: 3px solid ${props => props.isActive ? props.accentColor : 'transparent'};
+  border-radius: 0.5rem;
+  cursor: pointer;
+  overflow: hidden;
+  aspect-ratio: 16 / 10; // Maintain aspect ratio
+  transition: border-color 0.2s ease;
+  position: relative;
+  background-color: #e5e7eb; // Placeholder bg
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px ${props => props.accentColor}66;
+  }
+
+  /* Optional: subtle dim effect when not active */
+  /* img { 
+    opacity: ${props => props.isActive ? 1 : 0.85}; 
+    transition: opacity 0.2s ease;
+  } */
+`;
+
+const ThumbnailImage = styled.img`
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
 const DogCustomizer: React.FC<DogCustomizerProps> = ({ onCustomize, initialCustomization }) => {
   // Initialize state from initialCustomization
   const [name, setName] = useState(initialCustomization.name);
   const [breed, setBreed] = useState<DogCustomization['breed']>(initialCustomization.breed);
   const [color, setColor] = useState<string>(initialCustomization.color);
   const [accessories, setAccessories] = useState<string[]>(initialCustomization.accessories);
+  // Add state for selected background
+  const [background, setBackground] = useState<string>(initialCustomization.background);
 
   // Keep this useEffect to trigger updates outward
   useEffect(() => {
-    const currentCustomization: DogCustomization = { name, breed, color, accessories };
+    const currentCustomization: DogCustomization = { name, breed, color, accessories, background };
     console.log('[DogCustomizer] Change detected, calling onCustomize:', currentCustomization);
     onCustomize(currentCustomization);
-  }, [name, breed, color, accessories, onCustomize]);
+  }, [name, breed, color, accessories, background, onCustomize]);
 
   const handleAccessoryChange = (accessory: string) => {
     setAccessories(prev =>
@@ -204,6 +259,23 @@ const DogCustomizer: React.FC<DogCustomizerProps> = ({ onCustomize, initialCusto
             {/* Optionally display hex code */}
              <span style={{ fontFamily: 'monospace', fontSize: '0.9em' }}>{color}</span> 
           </ColorInputWrapper>
+        </FieldGroup>
+        <FieldGroup>
+          <Label>Background</Label>
+          <ThumbnailContainer>
+            {backgroundOptions.map(option => (
+              <ThumbnailButton
+                key={option.id}
+                type="button" // Prevent form submission
+                isActive={background === option.id}
+                accentColor={color} // Use main accent color for border
+                onClick={() => setBackground(option.id)}
+                aria-label={`Select ${option.name} background`}
+              >
+                <ThumbnailImage src={option.thumb} alt={`${option.name} background thumbnail`} />
+              </ThumbnailButton>
+            ))}
+          </ThumbnailContainer>
         </FieldGroup>
         <FieldGroup>
           <Label>Accessories</Label>
