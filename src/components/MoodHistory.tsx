@@ -65,12 +65,6 @@ const StyledSVG = styled.svg`
   height: 100%;
 `;
 
-const GuideLine = styled.line`
-  stroke: #9ca3af; // gray-400
-  stroke-width: 1;
-  stroke-dasharray: 2, 3;
-`;
-
 const MoodPath = styled(motion.path)`
   fill: none;
   stroke: #4b5563; // gray-600
@@ -93,35 +87,25 @@ const PointText = styled(motion.text)<{ pointColor: string }>`
 
 const MoodHistoryGraph: React.FC<MoodHistoryProps> = ({ moodHistory }) => {
   const svgRef = useRef<SVGSVGElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  // We need to reverse the history so oldest is first for plotting left-to-right
   const plottedHistory = [...moodHistory].reverse();
-
-  const padding = 10; // Define padding first
-  // Increase width significantly for horizontal scrolling
-  // Keep height relatively small
-  const pointSpacing = 50; // Adjust spacing between points
-  const calculatedWidth = Math.max(300, padding * 2 + (plottedHistory.length -1) * pointSpacing); // Ensure minimum width
+  const padding = 10;
+  const pointSpacing = 50;
+  const calculatedWidth = Math.max(300, padding * 2 + (plottedHistory.length - 1) * pointSpacing);
   const width = calculatedWidth;
   const height = 80;
   const maxScore = 3;
   const minScore = -2;
   const scoreRange = maxScore - minScore;
-
-  // Recalculate points with new width and point spacing
   const points = plottedHistory.map((entry, index) => {
     const score = emotionScores[entry.emotion] ?? 0;
-    // const x = padding + (index / Math.max(1, plottedHistory.length - 1)) * (width - 2 * padding);
-    const x = padding + index * pointSpacing; // Use fixed spacing
+    const x = padding + index * pointSpacing;
     const pointHeight = (height - 2 * padding);
     const y = height - padding - ((score - minScore) / scoreRange) * pointHeight;
     const clampedY = Math.max(padding, Math.min(height - padding, y));
     return { x, y: clampedY, score, emotion: entry.emotion };
   });
-
   const pathData = points.map((p, i) => (i === 0 ? 'M' : 'L') + `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-  const neutralLineY = height - padding - ((-minScore / scoreRange) * (height - 2 * padding));
 
   return (
     <GraphOuterContainer>

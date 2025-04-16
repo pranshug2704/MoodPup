@@ -24,7 +24,7 @@ import starsImageUrl from '../assets/starry_night.png';
 import hillsImageUrl from '../assets/sunset_hills.png';
 
 interface DogDisplayProps {
-  emotion: Emotion;
+  // emotion: Emotion; // Remove unused prop
   customization: DogCustomization;
   showBubble: boolean;
   bubbleText: string;
@@ -234,7 +234,7 @@ const SpeechBubble = styled(motion.div)<{ accentColor: string }>`
 `;
 
 const DogDisplay: React.FC<DogDisplayProps> = ({ 
-  emotion, 
+  // emotion, // Remove from destructuring
   customization, 
   showBubble, 
   bubbleText 
