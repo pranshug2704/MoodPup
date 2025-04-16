@@ -20,6 +20,8 @@ import bowtieImageUrl from '../assets/Bowtie.png';
 interface DogDisplayProps {
   emotion: Emotion;
   customization: DogCustomization;
+  showBubble: boolean;
+  bubbleText: string;
 }
 
 // Map breed names to PNG image URLs
@@ -171,45 +173,96 @@ const BowtieWrapper = styled(AccessoryWrapperBase)`
 `;
 // --- End Accessory-Specific Wrappers --- 
 
-const DogDisplay: React.FC<DogDisplayProps> = ({ emotion, customization }) => {
+// Speech Bubble Styled Component - Remove positioning styles
+const SpeechBubble = styled(motion.div)<{ accentColor: string }>`
+  position: absolute; /* Keep absolute */
+  /* Remove top, right, transform - will be set via inline style */
+  background-color: ${props => props.accentColor};
+  color: ${props => {
+      // Basic luminance check (adjust threshold as needed)
+      const hex = props.accentColor.replace('#', '');
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
+      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      return luminance > 0.5 ? '#374151' : '#ffffff'; // Dark text on light bg, White text on dark bg
+    }};
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  box-shadow: -2px 2px 5px rgba(0,0,0,0.15);
+  font-size: 0.9rem;
+  font-weight: 500;
+  white-space: nowrap;
+  z-index: 10;
+  /* Keep pointer-events: none; ? Maybe not if inside frame now */
+
+  /* Triangle Tail pointing right */
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%; 
+    left: 100%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-left: 8px solid ${props => props.accentColor};
+  }
+`;
+
+const DogDisplay: React.FC<DogDisplayProps> = ({ 
+  emotion, 
+  customization, 
+  showBubble, 
+  bubbleText 
+}) => {
   const breedImageUrl = breedImageMap[customization.breed] || shibaImageUrl;
-  
-  // Calculate offset for top/left style
   const offset = getBreedOffset(customization.breed);
-  // Start from center (50%) and apply pixel offset
-  // Note: Calculating percentage offset might be complex, pixel is simpler here
-  const positionStyle = {
-      top: `calc(50% + ${offset.y}px)`,
-      left: `calc(50% + ${offset.x}px)`,
-      // Transform needed to re-center the element itself after top/left shift
+  
+  // Base position calculation (relative to ImageFrame center)
+  const baseTop = `calc(50% + ${offset.y}px)`;
+  const baseLeft = `calc(50% + ${offset.x}px)`;
+  
+  // Style for the dog image wrapper
+  const imagePositionStyle = {
+      top: baseTop,
+      left: baseLeft,
       transform: `translate(-50%, -50%)` 
+  };
+  
+  // Style for the bubble (position relative to dog's center, then shift left)
+  const bubblePositionStyle = {
+      top: baseTop, 
+      left: baseLeft,
+      // Translate bubble up by 50% of its height (center vertically)
+      // Translate bubble left by 50% of dog width + 100% of bubble width + gap
+      // Using fixed pixel estimate for simplicity, adjust as needed:
+      transform: `translate(calc(-80% - -20px), 140%)` 
+      // Alternative: use percentages relative to wrapper if sizes are known
+      // transform: `translate(-110%, -50%)` // Example % adjustment
   };
 
   return (
     <DisplayContainer>
       <DogName>{customization.name}</DogName>
       <ImageFrame>
+        {/* Base Image */} 
         <AnimatePresence>
           <BaseImageWrapper
             key={customization.breed} 
             breed={customization.breed} 
-            // Apply top/left via style prop, remove transform style
-            style={positionStyle}
-            // Keep animation props for opacity/scale
+            style={imagePositionStyle} // Apply position style
             initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ 
-                opacity: 1, 
-                scale: 1,
-            }}
+            animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.7 }}
             transition={{ duration: 0.4, ease: "backOut" }}
           >
-            {/* Image is now positioned by its own styles within wrapper */}
             <img src={breedImageUrl} alt={customization.breed} />
           </BaseImageWrapper>
         </AnimatePresence>
 
-        {/* Accessories - Render specific wrappers */}
+        {/* Accessories */} 
         {customization.accessories.map(accKey => {
           const accessoryImageUrl = accessoryImageMap[accKey];
           if (!accessoryImageUrl) return null; 
@@ -249,6 +302,22 @@ const DogDisplay: React.FC<DogDisplayProps> = ({ emotion, customization }) => {
             </AnimatePresence>
           );
         })}
+
+        {/* Speech Bubble - Now inside ImageFrame */} 
+        <AnimatePresence>
+          {showBubble && (
+            <SpeechBubble
+              style={bubblePositionStyle} // Apply dynamic position style
+              initial={{ opacity: 0 /*, x: '10px' */ }}
+              animate={{ opacity: 1 /*, x: '0px' */ }}
+              exit={{ opacity: 0 /*, x: '5px' */ }}
+              transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+              accentColor={customization.color}
+            >
+              {bubbleText}
+            </SpeechBubble>
+          )}
+        </AnimatePresence>
       </ImageFrame>
     </DisplayContainer>
   );

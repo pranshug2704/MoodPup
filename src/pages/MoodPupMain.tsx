@@ -1,5 +1,5 @@
 /** @jsxImportSource @emotion/react */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import styled from '@emotion/styled';
 import DogDisplay from '../components/DogDisplay';
 import MoodInput from '../components/MoodInput';
@@ -87,18 +87,63 @@ const RightInputPanel = styled.div<{ customization: DogCustomization }>`
   border: 1px solid rgba(0, 0, 0, 0.05);
 `;
 
+// Helper function for bubble text
+const getBubbleTextForEmotion = (emotion: Emotion): string => {
+  switch (emotion) {
+    case 'happy':
+    case 'excited':
+      return 'Woof! Woof!';
+    case 'calm':
+    case 'neutral':
+      return 'Woof.';
+    case 'anxious':
+    case 'sad':
+      return 'Whimper...';
+    default:
+      return '...';
+  }
+};
+
 const MoodPupMain: React.FC = () => {
   const [currentEmotion, setCurrentEmotion] = useState<Emotion>('neutral');
   const { moodHistory, addMoodEntry } = useMoodHistory();
   const { customization, updateCustomization } = useDogCustomization();
+  
+  // State for speech bubble
+  const [showBubble, setShowBubble] = useState(false);
+  const [bubbleText, setBubbleText] = useState('');
+  // Use `number` for browser timeout IDs
+  const bubbleTimeoutRef = useRef<number | null>(null); 
 
   const handleEmotionDetected = useCallback((emotion: Emotion, text: string) => {
     setCurrentEmotion(emotion);
     addMoodEntry({ text, emotion });
+
+    // --- Speech Bubble Logic ---
+    // Clear any existing timeout
+    if (bubbleTimeoutRef.current) {
+      clearTimeout(bubbleTimeoutRef.current);
+    }
+    // Set text and show bubble
+    setBubbleText(getBubbleTextForEmotion(emotion));
+    setShowBubble(true);
+    // Set timeout to hide bubble after 3 seconds
+    bubbleTimeoutRef.current = setTimeout(() => {
+      setShowBubble(false);
+    }, 3000);
+
   }, [addMoodEntry]);
 
+  // Clear timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (bubbleTimeoutRef.current) {
+        clearTimeout(bubbleTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleCustomizeUpdate = useCallback((newCustomization: DogCustomization) => {
-    // console.log('[MoodPupMain] handleCustomizeUpdate called:', newCustomization);
     updateCustomization(newCustomization);
   }, [updateCustomization]);
 
@@ -117,6 +162,8 @@ const MoodPupMain: React.FC = () => {
             <DogDisplay
               emotion={currentEmotion}
               customization={customization}
+              showBubble={showBubble}
+              bubbleText={bubbleText}
             />
           </DogDisplayWrapper>
         </TopCenterSection>
