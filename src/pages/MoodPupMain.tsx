@@ -105,18 +105,16 @@ const getBubbleTextForEmotion = (emotion: Emotion): string => {
 };
 
 const MoodPupMain: React.FC = () => {
-  const [currentEmotion, setCurrentEmotion] = useState<Emotion>('neutral');
+  // const [currentEmotion, setCurrentEmotion] = useState<Emotion>('neutral');
   const { moodHistory, addMoodEntry } = useMoodHistory();
   const { customization, updateCustomization } = useDogCustomization();
   
-  // State for speech bubble
   const [showBubble, setShowBubble] = useState(false);
   const [bubbleText, setBubbleText] = useState('');
-  // Use `number` for browser timeout IDs
-  const bubbleTimeoutRef = useRef<number | null>(null); 
+  const bubbleTimeoutRef = useRef<number | null>(null);
 
   const handleEmotionDetected = useCallback((emotion: Emotion, text: string) => {
-    setCurrentEmotion(emotion);
+    // setCurrentEmotion(emotion);
     addMoodEntry({ text, emotion });
 
     // --- Speech Bubble Logic ---
