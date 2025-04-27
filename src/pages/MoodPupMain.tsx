@@ -94,6 +94,19 @@ const LeftPanel = styled.div<{ customization: DogCustomization; isCollapsed: boo
   background-color: ${props => getBackgroundColorForBreed(props.customization.breed)}; 
   /* Ensure DogCustomizer internal bg doesn't conflict or set it transparent */
   transition: width 0.3s ease, background-color 0.3s ease;
+
+  @media (max-width: 768px) {
+    position: fixed; /* Take out of flow */
+    top: 0;
+    left: 0;
+    height: calc(100% - 140px); /* Stop above graph */
+    z-index: 40; /* Below toggle button */
+    /* Adjust width for mobile overlay */
+    width: ${props => props.isCollapsed ? '0' : '72%'}; 
+    border-right: ${props => props.isCollapsed ? 'none' : '1px solid rgba(0, 0, 0, 0.1)'}; /* Add border when open */
+    box-shadow: ${props => props.isCollapsed ? 'none' : '4px 0px 15px rgba(0,0,0,0.1)'}; /* Add shadow when open */
+    cursor: grabbing;
+  }
 `;
 
 const CenterPanel = styled.div<{ customization: DogCustomization }>`
@@ -112,12 +125,23 @@ const TopCenterSection = styled.div`
   align-items: center;
   justify-content: center;
   padding: 2rem;
+
+  @media (max-width: 768px) {
+    padding: 1rem; /* Reduce padding on mobile */
+    /* flex-grow: 0; */ /* Revert this change */
+    /* align-items: center; */ /* Remove vertical alignment */
+  }
 `;
 
 const DogDisplayWrapper = styled.div`
   /* Add specific styles if needed */
   /* Shift removed - dog position handled internally now */
   /* transform: translateX(-15px); */ 
+  position: relative;
+
+  @media (max-width: 768px) {
+    height: 80px; /* Further reduce height on mobile */
+  }
 `;
 
 const BottomGraphSection = styled.div`
@@ -125,6 +149,10 @@ const BottomGraphSection = styled.div`
   height: 120px;
   box-sizing: border-box;
   position: relative;
+
+  @media (max-width: 768px) {
+    height: 100px; /* Reduce height on mobile */
+  }
 `;
 
 // Make RightInputPanel a motion component and add cursor styles
@@ -151,12 +179,16 @@ const RightInputPanel = styled(motion.div)<{ customization: DogCustomization }>`
     transform: none; /* Remove Y transform */
     width: 90%; /* Make it responsive */
     max-width: 400px; /* Optional max-width */
-    margin: 1.5rem auto; /* Center it below */
+    margin: 1rem auto; /* Reduce vertical margin */
     right: auto;
     top: auto;
     backdrop-filter: none; /* Remove blur on mobile? */
     background: rgba(255, 255, 255, 0.8); /* Adjust background */
     z-index: auto;
+    cursor: default; /* Disable grab cursor on mobile */
+    &:active {
+      cursor: default;
+    }
   }
 `;
 
@@ -186,6 +218,8 @@ const MoodPupMain: React.FC = () => {
   const [bubbleText, setBubbleText] = useState('');
   const bubbleTimeoutRef = useRef<number | null>(null);
   const [isCustomizerCollapsed, setIsCustomizerCollapsed] = useState(true); // Start collapsed
+  const leftPanelRef = useRef<HTMLDivElement>(null); // Ref for the panel
+  const toggleButtonRef = useRef<HTMLButtonElement>(null); // Ref for the toggle button
 
   const handleEmotionDetected = useCallback((emotion: Emotion, text: string) => {
     // setCurrentEmotion(emotion);
@@ -223,14 +257,63 @@ const MoodPupMain: React.FC = () => {
 
   const toggleCustomizer = () => setIsCustomizerCollapsed(!isCustomizerCollapsed);
 
+  // Effect to handle clicking outside the panel on mobile
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Check if click is outside the panel AND outside the toggle button
+      if (
+        leftPanelRef.current &&
+        !leftPanelRef.current.contains(event.target as Node) &&
+        toggleButtonRef.current &&
+        !toggleButtonRef.current.contains(event.target as Node)
+      ) {
+        // Only close if it's currently open
+        if (!isCustomizerCollapsed) {
+           setIsCustomizerCollapsed(true);
+        }
+      }
+    };
+
+    // Check if we are on mobile and the panel is open
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
+
+    // Add listener only when the panel is open AND on mobile
+    if (!isCustomizerCollapsed && isMobile) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      // Remove listener if panel is closed or becomes closed, or if not on mobile
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+
+    // Cleanup listener on component unmount or when state/media query changes
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+    // Add isCustomizerCollapsed to dependency array
+    // We don't strictly need to add isMobile as a dependency here,
+    // as the listener is removed/added correctly based on isCustomizerCollapsed alone,
+    // but it's good practice to include variables used in the effect logic.
+    // However, adding window.matchMedia directly can cause issues.
+    // A more robust solution might involve a dedicated resize listener hook,
+    // but this check on effect run should cover most cases.
+  }, [isCustomizerCollapsed]); // Rerun effect if collapsed state changes
+
   return (
     <MainContainer customization={customization}>
       {/* Always visible toggle button */}
-      <CustomizeToggleButton onClick={toggleCustomizer} title={isCustomizerCollapsed ? "Open Customizer" : "Close Customizer"}>
+      <CustomizeToggleButton 
+        ref={toggleButtonRef} // Add ref
+        onClick={toggleCustomizer} 
+        title={isCustomizerCollapsed ? "Open Customizer" : "Close Customizer"}
+      >
         <img src={isCustomizerCollapsed ? GearIconUrl : BrushIconUrl} alt={isCustomizerCollapsed ? "Open Customizer" : "Close Customizer"} />
       </CustomizeToggleButton>
 
-      <LeftPanel customization={customization} isCollapsed={isCustomizerCollapsed}>
+      <LeftPanel 
+        ref={leftPanelRef} // Add ref
+        customization={customization} 
+        isCollapsed={isCustomizerCollapsed}
+      >
         <DogCustomizer
           onCustomize={handleCustomizeUpdate}
           initialCustomization={customization}
