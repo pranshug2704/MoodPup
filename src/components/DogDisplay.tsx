@@ -14,6 +14,8 @@ import bandanaImageUrl from '../assets/Bandana.png';
 import glassesImageUrl from '../assets/Glasses.png';
 import hatImageUrl from '../assets/Hat.png';
 import bowtieImageUrl from '../assets/Bowtie.png';
+// Import Scarf image
+import scarfImageUrl from '../assets/Scarf.png'; // New import
 // Add a default/fallback image import if desired
 // import defaultDogImageUrl from '../assets/DefaultDog.png';
 
@@ -40,7 +42,7 @@ const breedImageMap: Record<DogCustomization['breed'], string> = {
 
 // Map accessory names to PNG image URLs
 const accessoryImageMap: Record<string, string> = {
-  bandana: bandanaImageUrl,
+  scarf: scarfImageUrl, // Rename bandana -> scarf, update variable
   glasses: glassesImageUrl,
   hat: hatImageUrl,
   bow_tie: bowtieImageUrl,
@@ -69,12 +71,12 @@ const getBreedOffset = (breed: DogCustomization['breed']) => {
 };
 
 // --- Styled Components ---
-const DisplayContainer = styled.div<{ backgroundId: string }>`
+const DisplayContainer = styled.div<{ backgroundId: string; accentColor: string }>`
   padding: 1.5rem;
   /* background-color: #f0f9ff; */ /* Remove static background color */
   border-radius: 1rem;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Slightly stronger shadow */
-  /* border: 2px solid rgba(255, 255, 255, 0.5); */ /* Remove border? */
+  border: 3px solid ${props => props.accentColor}cc; /* Use accent color for border (slightly transparent) */
   width: 280px;
   text-align: center;
   position: relative;
@@ -150,10 +152,10 @@ const AccessoryWrapperBase = styled(motion.div)`
 const HatWrapper = styled(AccessoryWrapperBase)`
   width: 50%; // Example size
   height: auto;
-  top: -12%; // Example position
+  top: -8%; /* Adjusted from -12% */
   left: 50%;
   transform: translateX(-50%);
-  z-index: 3; 
+  z-index: 2;
 `;
 
 const GlassesWrapper = styled(AccessoryWrapperBase)`
@@ -165,15 +167,15 @@ const GlassesWrapper = styled(AccessoryWrapperBase)`
   z-index: 2;
 `;
 
-// Update BandanaWrapper to accept breed and adjust size
-const BandanaWrapper = styled(AccessoryWrapperBase)<{ breed: DogCustomization['breed'] }>`
+// Update BandanaWrapper to ScarfWrapper
+const ScarfWrapper = styled(AccessoryWrapperBase)<{ breed: DogCustomization['breed'] }>`
   /* Base size for Shiba/Husky */
   width: 70%; 
   height: auto;
   bottom: 10%;
   left: 47%;
   transform: translateX(-50%);
-  z-index: 1;
+  z-index: 2;
 
   /* Adjust size for specific breeds */
   ${props => (props.breed === 'Poodle' || props.breed === 'Golden Retriever') && `
@@ -266,7 +268,10 @@ const DogDisplay: React.FC<DogDisplayProps> = ({
   };
 
   return (
-    <DisplayContainer backgroundId={customization.background}>
+    <DisplayContainer 
+      backgroundId={customization.background}
+      accentColor={customization.color} // Pass accent color
+    >
       <DogName>{customization.name}</DogName>
       <ImageFrame>
         {/* Base Image */} 
@@ -299,9 +304,9 @@ const DogDisplay: React.FC<DogDisplayProps> = ({
             case 'glasses': 
               WrapperComponent = GlassesWrapper; 
               break;
-            case 'bandana': 
-              WrapperComponent = BandanaWrapper; 
-              // Pass the breed specifically to BandanaWrapper
+            case 'scarf': // Rename bandana -> scarf
+              WrapperComponent = ScarfWrapper; // Rename BandanaWrapper -> ScarfWrapper
+              // Pass the breed specifically to ScarfWrapper
               additionalProps = { breed: customization.breed }; 
               break;
             case 'bow_tie': 

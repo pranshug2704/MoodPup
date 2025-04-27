@@ -8,6 +8,13 @@ import parkThumbUrl from '../assets/park_day.png';
 import roomThumbUrl from '../assets/cozy_room.png';
 import starsThumbUrl from '../assets/starry_night.png';
 import hillsThumbUrl from '../assets/sunset_hills.png';
+// Import dice icon
+import diceIconUrl from '../assets/dice.png';
+// Import accessory images
+import scarfImageUrl from '../assets/Scarf.png';
+import glassesImageUrl from '../assets/Glasses.png';
+import hatImageUrl from '../assets/Hat.png';
+import bowtieImageUrl from '../assets/Bowtie.png';
 
 // Define the types for customization options
 export interface DogCustomization {
@@ -24,14 +31,14 @@ interface DogCustomizerProps {
 }
 
 const availableBreeds: DogCustomization['breed'][] = ['Shiba', 'Golden Retriever', 'Husky', 'Poodle'];
-const availableAccessories = ['bandana', 'glasses', 'hat', 'bow_tie'];
+const availableAccessories = ['scarf', 'glasses', 'hat', 'bow_tie'];
 
 // Helper for accessory icon/label
 const accessoryDetails: { [key: string]: { icon: string; label: string } } = {
-  bandana: { icon: '🧣', label: 'Bandana' },
-  glasses: { icon: '🕶️', label: 'Glasses' },
-  hat: { icon: '🤠', label: 'Hat' },
-  bow_tie: { icon: '🎀', label: 'Bow Tie' },
+  scarf: { icon: scarfImageUrl, label: 'Scarf' },
+  glasses: { icon: glassesImageUrl, label: 'Glasses' },
+  hat: { icon: hatImageUrl, label: 'Hat' },
+  bow_tie: { icon: bowtieImageUrl, label: 'Bow Tie' },
 };
 
 // Background Options Data
@@ -53,11 +60,13 @@ const PanelContainer = styled.div`
   border-right: 1px solid rgba(0, 0, 0, 0.08);
 `;
 
-const Title = styled.h2`
+const Title = styled.h2<{ accentColor: string }>`
   font-size: 1.25rem;
   font-weight: 600;
   margin-bottom: 1.5rem;
-  color: #1f2937; // gray-800
+  color: ${props => props.accentColor}; /* Use accent color */
+  padding-left: 45px; /* Add padding to avoid toggle button */
+  transition: color 0.3s ease; /* Add transition */
 `;
 
 const CustomForm = styled.form`
@@ -79,7 +88,7 @@ const Label = styled.label`
 const Input = styled.input<{ accentColor: string }>`
   width: 100%;
   padding: 0.625rem;
-  border: 1px solid #d1d5db; // gray-300
+  border: 2px solid ${props => props.accentColor}cc; /* Use accent color, thicker border */
   border-radius: 0.5rem;
   font-size: 1rem;
   box-sizing: border-box; // Ensure consistent sizing
@@ -95,7 +104,7 @@ const Input = styled.input<{ accentColor: string }>`
 const Select = styled.select<{ accentColor: string }>`
   width: 100%;
   padding: 0 0.625rem; // Adjust padding slightly for select appearance
-  border: 1px solid #d1d5db;
+  border: 2px solid ${props => props.accentColor}cc; /* Use accent color, thicker border */
   border-radius: 0.5rem;
   font-size: 1rem;
   background-color: white;
@@ -117,33 +126,63 @@ const Select = styled.select<{ accentColor: string }>`
 const ColorInputWrapper = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem; /* Increased gap */
 `;
 
 const ColorInput = styled.input`
+  /* Reset appearance */
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-  width: 40px;
-  height: 40px;
+  /* Rectangular Shape */
+  width: 180px; /* Wider rectangle */
+  height: 32px; /* Shorter */
   background-color: transparent;
-  border: none;
+  border: 1px solid #d1d5db; /* Add a subtle border */
+  border-radius: 0.375rem; /* Slight rounding */
   cursor: pointer;
-  border-radius: 50%;
-  overflow: hidden; // Ensure background color fills the circle
+  overflow: hidden;
 
+  /* Ensure color swatch fills the rectangle */
   &::-webkit-color-swatch-wrapper {
     padding: 0;
-    border-radius: 50%;
+    border-radius: 0; /* Remove rounding from wrapper */
   }
   &::-webkit-color-swatch {
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 50%;
+    border: none; /* Remove default swatch border */
+    border-radius: 0; /* Remove rounding */
+  }
+  &::-moz-color-swatch {
+    border: none;
+    border-radius: 0;
+  }
+`;
+
+const RandomizeButton = styled(motion.button)`
+  /* padding: 0.5rem 0.75rem; */ /* Remove padding */
+  padding: 0.25rem; /* Add small padding around image */
+  width: 40px; /* Keep width */
+  height: 32px; /* Match shorter color input height */
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  background-color: white;
+  /* color: #4b5563; */ /* No text color */
+  /* font-size: 0.875rem; */ /* No text */
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  display: flex; /* Center image */
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background-color: #f9fafb;
+    border-color: #9ca3af;
   }
 
-  &::-moz-color-swatch {
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 50%;
+  img {
+    display: block;
+    height: 75%; /* Adjust size of icon */
+    width: auto;
   }
 `;
 
@@ -164,6 +203,13 @@ const AccessoryButton = styled(motion.button)<{ isActive: boolean; accentColor: 
      border-color: ${props => props.isActive ? props.accentColor : '#9ca3af'};
      background-color: ${props => props.isActive ? `${props.accentColor}33` : '#f9fafb'}; /* Adjust hover alpha */
   }
+`;
+
+// Style for the accessory icon image within the button
+const AccessoryIconImage = styled.img`
+  height: 20px; /* Control image size */
+  width: 20px;
+  object-fit: contain;
 `;
 
 const AccessoryLabel = styled.span`
@@ -233,10 +279,30 @@ const DogCustomizer: React.FC<DogCustomizerProps> = ({ onCustomize, initialCusto
     );
   };
 
+  // Function to generate and set random color
+  const handleRandomizeColor = () => {
+    const randomColor = `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`;
+    setColor(randomColor);
+  };
+
   return (
     <PanelContainer>
-      <Title>Customize 🎨</Title>
+      <Title accentColor={color}>Customize</Title>
       <CustomForm>
+        <FieldGroup>
+          <Label htmlFor="accentColor">Accent Color</Label>
+          <ColorInputWrapper>
+            <ColorInput type="color" id="accentColor" value={color} onChange={(e) => setColor(e.target.value)} />
+            <RandomizeButton
+              type="button" // Prevent form submission
+              onClick={handleRandomizeColor}
+              whileTap={{ scale: 0.95 }}
+              title="Randomize Color" // Add tooltip
+            >
+              <img src={diceIconUrl} alt="Randomize" />
+            </RandomizeButton>
+          </ColorInputWrapper>
+        </FieldGroup>
         <FieldGroup>
           <Label htmlFor="dogName">Name</Label>
           <Input accentColor={color} type="text" id="dogName" value={name} onChange={(e) => setName(e.target.value)} placeholder="MoodPup's Name" required />
@@ -248,56 +314,43 @@ const DogCustomizer: React.FC<DogCustomizerProps> = ({ onCustomize, initialCusto
           </Select>
         </FieldGroup>
         <FieldGroup>
-          <Label htmlFor="accentColor">Accent Color</Label>
-          <ColorInputWrapper>
-            <ColorInput 
-              type="color" 
-              id="accentColor" 
-              value={color} 
-              onChange={(e) => setColor(e.target.value)} 
-            />
-            {/* Optionally display hex code */}
-             <span style={{ fontFamily: 'monospace', fontSize: '0.9em' }}>{color}</span> 
-          </ColorInputWrapper>
+          <Label>Accessories</Label>
+          <ThumbnailContainer>
+            {availableAccessories.map(accKey => {
+              const detail = accessoryDetails[accKey];
+              const isActive = accessories.includes(accKey);
+              return (
+                <AccessoryButton
+                  key={accKey}
+                  type="button"
+                  isActive={isActive}
+                  onClick={() => handleAccessoryChange(accKey)}
+                  accentColor={color}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  <AccessoryIconImage src={detail.icon} alt={detail.label} />
+                  <AccessoryLabel>{detail.label}</AccessoryLabel>
+                </AccessoryButton>
+              );
+            })}
+          </ThumbnailContainer>
         </FieldGroup>
         <FieldGroup>
           <Label>Background</Label>
           <ThumbnailContainer>
-            {backgroundOptions.map(option => (
+            {backgroundOptions.map(bg => (
               <ThumbnailButton
-                key={option.id}
-                type="button" // Prevent form submission
-                isActive={background === option.id}
-                accentColor={color} // Use main accent color for border
-                onClick={() => setBackground(option.id)}
-                aria-label={`Select ${option.name} background`}
+                key={bg.id}
+                type="button"
+                isActive={background === bg.id}
+                onClick={() => setBackground(bg.id)}
+                accentColor={color}
+                title={bg.name}
               >
-                <ThumbnailImage src={option.thumb} alt={`${option.name} background thumbnail`} />
+                <ThumbnailImage src={bg.thumb} alt={bg.name} />
               </ThumbnailButton>
             ))}
           </ThumbnailContainer>
-        </FieldGroup>
-        <FieldGroup>
-          <Label>Accessories</Label>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
-            {availableAccessories.map(acc => {
-              const isActive = accessories.includes(acc);
-              const details = accessoryDetails[acc] || { icon: '?', label: acc };
-              return (
-                <AccessoryButton
-                  key={acc}
-                  type="button"
-                  onClick={() => handleAccessoryChange(acc)}
-                  whileTap={{ scale: 0.95 }}
-                  isActive={isActive}
-                  accentColor={color}
-                >
-                  <span>{details.icon}</span>
-                  <AccessoryLabel>{details.label}</AccessoryLabel>
-                </AccessoryButton>
-              );
-            })}
-          </div>
         </FieldGroup>
       </CustomForm>
     </PanelContainer>

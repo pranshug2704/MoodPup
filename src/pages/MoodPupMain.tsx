@@ -1,6 +1,7 @@
 /** @jsxImportSource @emotion/react */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import styled from '@emotion/styled';
+import { motion } from 'framer-motion';
 import DogDisplay from '../components/DogDisplay';
 import MoodInput from '../components/MoodInput';
 import MoodHistoryGraph from '../components/MoodHistory';
@@ -8,6 +9,10 @@ import DogCustomizer, { DogCustomization } from '../components/DogCustomizer';
 import { useMoodHistory } from '../hooks/useMoodHistory';
 import { useDogCustomization } from '../hooks/useDogCustomization';
 import { Emotion } from '../utils/emotionAnalyzer';
+
+// Import button images
+import GearIconUrl from '../assets/customize_closed_gear.png';
+import BrushIconUrl from '../assets/customize_open_dogbrush.png';
 
 // Helper function for dynamic background color based on breed
 const getBackgroundColorForBreed = (breed: DogCustomization['breed']): string => {
@@ -36,11 +41,55 @@ const MainContainer = styled.div<{ customization: DogCustomization }>`
   transition: background-color 0.3s ease;
 `;
 
-const LeftPanel = styled.div<{ customization: DogCustomization }>`
+// New button positioned independently
+const CustomizeToggleButton = styled.button`
+  position: fixed; /* Or absolute relative to MainContainer */
+  top: 1rem;
+  left: 1.5rem; /* Adjusted offset further right */
+  z-index: 50; /* Ensure it's above everything */
+  /* background: rgba(255, 255, 255, 0.7); */ /* Remove background */
+  background: transparent;
+  /* backdrop-filter: blur(4px); */ /* Optional: remove filter if bg is transparent */
+  border: none; /* Remove border */
+  /* color: #374151; // gray-700 */ /* No text color needed */
+  padding: 0; /* Remove padding */
+  border-radius: 50%; /* Make it circular */
+  width: 44px; /* Adjust size as needed */
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* font-size: 1.25rem; */ /* No font size needed */
+  cursor: pointer;
+  /* box-shadow: 0 2px 5px rgba(0,0,0,0.1); */ /* Optional: keep or remove shadow */
+  transition: transform 0.2s ease;
+  &:hover {
+    /* background: rgba(255, 255, 255, 0.9); */ /* No hover background */
+    /* Add subtle scale or other hover effect if desired */
+    transform: scale(1.05);
+  }
+  &:active {
+    transform: scale(0.95);
+  }
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    /* object-fit: contain; */ /* Add object-fit */
+    object-fit: cover; /* Use cover instead */
+  }
+`;
+
+// LeftPanel no longer needs isCollapsed prop directly for its button
+const LeftPanel = styled.div<{ customization: DogCustomization; isCollapsed: boolean }>`
   flex-shrink: 0;
+  position: relative; /* Keep relative if needed for other internal positioning */
+  width: ${props => props.isCollapsed ? '0' : '280px'}; /* Control width based on state */
+  overflow: hidden; /* Hide content when collapsed */
   background-color: ${props => getBackgroundColorForBreed(props.customization.breed)}; 
   /* Ensure DogCustomizer internal bg doesn't conflict or set it transparent */
-  transition: background-color 0.3s ease;
+  transition: width 0.3s ease, background-color 0.3s ease;
 `;
 
 const CenterPanel = styled.div<{ customization: DogCustomization }>`
@@ -72,7 +121,8 @@ const BottomGraphSection = styled.div`
   position: relative;
 `;
 
-const RightInputPanel = styled.div<{ customization: DogCustomization }>`
+// Make RightInputPanel a motion component and add cursor styles
+const RightInputPanel = styled(motion.div)<{ customization: DogCustomization }>`
   position: fixed;
   right: 1.5rem;
   top: 50%;
@@ -85,6 +135,10 @@ const RightInputPanel = styled.div<{ customization: DogCustomization }>`
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
   z-index: 10;
   border: 1px solid rgba(0, 0, 0, 0.05);
+  cursor: grab; /* Add grab cursor */
+  &:active {
+    cursor: grabbing; /* Change cursor while dragging */
+  }
 `;
 
 // Helper function for bubble text
@@ -112,6 +166,7 @@ const MoodPupMain: React.FC = () => {
   const [showBubble, setShowBubble] = useState(false);
   const [bubbleText, setBubbleText] = useState('');
   const bubbleTimeoutRef = useRef<number | null>(null);
+  const [isCustomizerCollapsed, setIsCustomizerCollapsed] = useState(false); // State for collapse
 
   const handleEmotionDetected = useCallback((emotion: Emotion, text: string) => {
     // setCurrentEmotion(emotion);
@@ -145,9 +200,18 @@ const MoodPupMain: React.FC = () => {
     updateCustomization(newCustomization);
   }, [updateCustomization]);
 
+  // console.log('[MoodPupMain] Rendering with showBubble:', showBubble);
+
+  const toggleCustomizer = () => setIsCustomizerCollapsed(!isCustomizerCollapsed);
+
   return (
     <MainContainer customization={customization}>
-      <LeftPanel customization={customization}>
+      {/* Always visible toggle button */}
+      <CustomizeToggleButton onClick={toggleCustomizer} title={isCustomizerCollapsed ? "Open Customizer" : "Close Customizer"}>
+        <img src={isCustomizerCollapsed ? GearIconUrl : BrushIconUrl} alt={isCustomizerCollapsed ? "Open Customizer" : "Close Customizer"} />
+      </CustomizeToggleButton>
+
+      <LeftPanel customization={customization} isCollapsed={isCustomizerCollapsed}>
         <DogCustomizer
           onCustomize={handleCustomizeUpdate}
           initialCustomization={customization}
@@ -170,7 +234,11 @@ const MoodPupMain: React.FC = () => {
         </BottomGraphSection>
       </CenterPanel>
 
-      <RightInputPanel customization={customization}>
+      <RightInputPanel 
+        customization={customization}
+        drag // Enable dragging
+        dragMomentum={false} // Disable momentum
+      >
         <MoodInput 
             onEmotionDetected={handleEmotionDetected} 
             customization={customization} 
