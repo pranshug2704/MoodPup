@@ -166,7 +166,7 @@ const MoodPupMain: React.FC = () => {
   const [showBubble, setShowBubble] = useState(false);
   const [bubbleText, setBubbleText] = useState('');
   const bubbleTimeoutRef = useRef<number | null>(null);
-  const [isCustomizerCollapsed, setIsCustomizerCollapsed] = useState(false); // State for collapse
+  const [isCustomizerCollapsed, setIsCustomizerCollapsed] = useState(true); // Start collapsed
 
   const handleEmotionDetected = useCallback((emotion: Emotion, text: string) => {
     // setCurrentEmotion(emotion);
