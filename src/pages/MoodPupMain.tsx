@@ -1,7 +1,7 @@
 /** @jsxImportSource @emotion/react */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import styled from '@emotion/styled';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import DogDisplay from '../components/DogDisplay';
 import MoodInput from '../components/MoodInput';
 import MoodHistoryGraph from '../components/MoodHistory';
@@ -13,6 +13,7 @@ import { Emotion } from '../utils/emotionAnalyzer';
 // Import button images
 import GearIconUrl from '../assets/customize_closed_gear.png';
 import BrushIconUrl from '../assets/customize_open_dogbrush.png';
+import SuggestionsIconUrl from '../assets/suggestions.png'; // Import suggestions icon
 
 // Helper function for dynamic background color based on breed
 const getBackgroundColorForBreed = (breed: DogCustomization['breed']): string => {
@@ -85,6 +86,39 @@ const CustomizeToggleButton = styled.button`
   }
 `;
 
+// Suggestions Button (Top Right) - Back to button
+const SuggestionsButton = styled.button`
+  position: fixed;
+  top: 1.1rem; /* Match customize button top */
+  right: 1.5rem; /* Position on the right */
+  z-index: 50; /* Ensure it's above everything */
+  background: transparent;
+  border: none;
+  padding: 0;
+  border-radius: 50%; /* Make it circular */
+  width: 44px; /* Match customize button size */
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+  &:active {
+    transform: scale(0.95);
+  }
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Or contain, depending on image aspect ratio */
+  }
+`;
+
 // LeftPanel no longer needs isCollapsed prop directly for its button
 const LeftPanel = styled.div<{ customization: DogCustomization; isCollapsed: boolean }>`
   flex-shrink: 0;
@@ -109,27 +143,36 @@ const LeftPanel = styled.div<{ customization: DogCustomization; isCollapsed: boo
   }
 `;
 
+// Restore previous CenterPanel layout
 const CenterPanel = styled.div<{ customization: DogCustomization }>`
   flex-grow: 1;
   display: flex;
-  flex-direction: column;
+  flex-direction: column; // Restore column direction
+  align-items: center; // Keep desktop alignment
+  justify-content: flex-start; // Restore start justification
+  /* justify-content: center; */ // Remove center justification
   background-color: ${props => getBackgroundColorForBreed(props.customization.breed)};
   transition: background-color 0.3s ease;
-  /* Ensure it takes full width on mobile if MainContainer is column */
   width: 100%; 
+
+  @media (max-width: 768px) {
+    /* flex-grow: 0; */ // Remove this mobile override
+    /* No specific mobile overrides needed here now */
+  }
 `;
 
 const TopCenterSection = styled.div`
-  flex-grow: 1;
+  flex-grow: 1; // Restore flex-grow to push graph down
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem;
+  width: 100%; // Ensure it takes width within CenterPanel
+  position: relative;
 
   @media (max-width: 768px) {
     padding: 1rem; /* Reduce padding on mobile */
-    /* flex-grow: 0; */ /* Revert this change */
-    /* align-items: center; */ /* Remove vertical alignment */
+    flex-grow: 1; // Keep flex-grow on mobile too
   }
 `;
 
@@ -151,7 +194,7 @@ const BottomGraphSection = styled.div`
   position: relative;
 
   @media (max-width: 768px) {
-    height: 100px; /* Reduce height on mobile */
+    height: 80px; /* Further reduce height on mobile */
   }
 `;
 
@@ -209,6 +252,88 @@ const getBubbleTextForEmotion = (emotion: Emotion): string => {
   }
 };
 
+// Suggestion Panel Styles
+const PanelOverlay = styled(motion.div)`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 55; /* Above other elements but below panel */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const SuggestionPanel = styled(motion.div)`
+  background: white;
+  padding: 1.5rem 2rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 400px;
+  z-index: 60;
+  position: relative; // For positioning close button
+`;
+
+const PanelTitle = styled.h3`
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  color: #374151;
+`;
+
+const SuggestionTextarea = styled.textarea`
+  width: 100%;
+  min-height: 100px;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  box-sizing: border-box;
+  margin-bottom: 1rem;
+  resize: vertical;
+  &:focus {
+    outline: none;
+    border-color: #a5b4fc; // Use a neutral focus color
+    box-shadow: 0 0 0 2px #a5b4fc66;
+  }
+`;
+
+const PanelButton = styled(motion.button)`
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 0.5rem;
+  background-color: #8b5cf6; // Purple-500
+  color: white;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  &:hover {
+    background-color: #7c3aed; // Purple-600
+  }
+`;
+
+const ClosePanelButton = styled.button`
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  color: #9ca3af; // Gray-400
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+  &:hover {
+    color: #6b7280; // Gray-500
+  }
+`;
+
+// --- End Suggestion Panel Styles ---
+
 const MoodPupMain: React.FC = () => {
   // const [currentEmotion, setCurrentEmotion] = useState<Emotion>('neutral');
   const { moodHistory, addMoodEntry } = useMoodHistory();
@@ -220,6 +345,9 @@ const MoodPupMain: React.FC = () => {
   const [isCustomizerCollapsed, setIsCustomizerCollapsed] = useState(true); // Start collapsed
   const leftPanelRef = useRef<HTMLDivElement>(null); // Ref for the panel
   const toggleButtonRef = useRef<HTMLButtonElement>(null); // Ref for the toggle button
+  const [isSuggestionPanelOpen, setIsSuggestionPanelOpen] = useState(false);
+  const [suggestionText, setSuggestionText] = useState('');
+  const [isSubmittingSuggestion, setIsSubmittingSuggestion] = useState(false);
 
   const handleEmotionDetected = useCallback((emotion: Emotion, text: string) => {
     // setCurrentEmotion(emotion);
@@ -298,6 +426,56 @@ const MoodPupMain: React.FC = () => {
     // but this check on effect run should cover most cases.
   }, [isCustomizerCollapsed]); // Rerun effect if collapsed state changes
 
+  // --- Suggestion Panel Logic ---
+  const toggleSuggestionPanel = () => {
+    setIsSuggestionPanelOpen(!isSuggestionPanelOpen);
+    // Clear text when opening
+    if (!isSuggestionPanelOpen) {
+        setSuggestionText('');
+    }
+  };
+
+  const handleSuggestionSubmit = async () => {
+    if (suggestionText.trim()) {
+      setIsSubmittingSuggestion(true);
+      const endpoint = 'https://formspree.io/f/movdvkor';
+      const payload = {
+        suggestion: suggestionText,
+      };
+
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (response.ok) {
+          alert("Suggestion sent successfully! Thank you!");
+          setSuggestionText('');
+          setIsSuggestionPanelOpen(false);
+        } else {
+          // Try to get error message from Formspree response if possible
+          const errorData = await response.json().catch(() => ({})); // Catch if response isn't JSON
+          const errorMessage = errorData?.error || `Form submission failed (Status: ${response.status}). Please try again.`;
+          console.error("Formspree error:", errorData);
+          alert(errorMessage);
+        }
+      } catch (error) {
+        console.error("Network error submitting suggestion:", error);
+        alert("Could not send suggestion due to a network error. Please check your connection and try again.");
+      } finally {
+        setIsSubmittingSuggestion(false);
+      }
+    } else {
+      alert("Please enter a suggestion before submitting.");
+    }
+  };
+  // --- End Suggestion Panel Logic ---
+
   return (
     <MainContainer customization={customization}>
       {/* Always visible toggle button */}
@@ -308,6 +486,11 @@ const MoodPupMain: React.FC = () => {
       >
         <img src={isCustomizerCollapsed ? GearIconUrl : BrushIconUrl} alt={isCustomizerCollapsed ? "Open Customizer" : "Close Customizer"} />
       </CustomizeToggleButton>
+
+      {/* Suggestions Button */}
+      <SuggestionsButton title="Send Suggestion" onClick={toggleSuggestionPanel}>
+        <img src={SuggestionsIconUrl} alt="Send Suggestion" />
+      </SuggestionsButton>
 
       <LeftPanel 
         ref={leftPanelRef} // Add ref
@@ -320,6 +503,7 @@ const MoodPupMain: React.FC = () => {
         />
       </LeftPanel>
 
+      {/* Center Panel (Restored Structure) */}
       <CenterPanel customization={customization}>
         <TopCenterSection>
           <DogDisplayWrapper>
@@ -330,9 +514,10 @@ const MoodPupMain: React.FC = () => {
             />
           </DogDisplayWrapper>
         </TopCenterSection>
-
+        {/* Bottom Graph Section (Moved back inside CenterPanel) */}
+        {/* Note: This requires CenterPanel to be flex-direction: column */}
         <BottomGraphSection>
-          <MoodHistoryGraph moodHistory={moodHistory} />
+           <MoodHistoryGraph moodHistory={moodHistory} />
         </BottomGraphSection>
       </CenterPanel>
 
@@ -346,6 +531,39 @@ const MoodPupMain: React.FC = () => {
             customization={customization} 
         />
       </RightInputPanel>
+
+      {/* Suggestion Panel Modal */}
+      <AnimatePresence>
+        {isSuggestionPanelOpen && (
+          <PanelOverlay
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <SuggestionPanel
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+            >
+              <ClosePanelButton onClick={toggleSuggestionPanel}>&times;</ClosePanelButton>
+              <PanelTitle>Suggestions</PanelTitle>
+              <SuggestionTextarea
+                value={suggestionText}
+                onChange={(e) => setSuggestionText(e.target.value)}
+                placeholder="Enter your suggestion here..."
+              />
+              <PanelButton 
+                onClick={handleSuggestionSubmit}
+                whileTap={{ scale: 0.95 }}
+                disabled={isSubmittingSuggestion}
+              >
+                {isSubmittingSuggestion ? 'Sending...' : 'Submit'}
+              </PanelButton>
+            </SuggestionPanel>
+          </PanelOverlay>
+        )}
+      </AnimatePresence>
     </MainContainer>
   );
 };
