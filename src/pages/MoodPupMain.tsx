@@ -39,6 +39,10 @@ const MainContainer = styled.div<{ customization: DogCustomization }>`
   }};
   /* background-color: magenta; */ /* Remove debug color */
   transition: background-color 0.3s ease;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
 `;
 
 // New button positioned independently
@@ -98,6 +102,8 @@ const CenterPanel = styled.div<{ customization: DogCustomization }>`
   flex-direction: column;
   background-color: ${props => getBackgroundColorForBreed(props.customization.breed)};
   transition: background-color 0.3s ease;
+  /* Ensure it takes full width on mobile if MainContainer is column */
+  width: 100%; 
 `;
 
 const TopCenterSection = styled.div`
@@ -138,6 +144,19 @@ const RightInputPanel = styled(motion.div)<{ customization: DogCustomization }>`
   cursor: grab; /* Add grab cursor */
   &:active {
     cursor: grabbing; /* Change cursor while dragging */
+  }
+
+  @media (max-width: 768px) {
+    position: static; /* Change from fixed */
+    transform: none; /* Remove Y transform */
+    width: 90%; /* Make it responsive */
+    max-width: 400px; /* Optional max-width */
+    margin: 1.5rem auto; /* Center it below */
+    right: auto;
+    top: auto;
+    backdrop-filter: none; /* Remove blur on mobile? */
+    background: rgba(255, 255, 255, 0.8); /* Adjust background */
+    z-index: auto;
   }
 `;
 
