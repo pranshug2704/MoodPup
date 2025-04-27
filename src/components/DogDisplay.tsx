@@ -10,7 +10,7 @@ import shibaImageUrl from '../assets/Shiba.png';
 import retrieverImageUrl from '../assets/Retriever.png';
 import huskyImageUrl from '../assets/Husky.png';
 import poodleImageUrl from '../assets/Poodle.png';
-import bandanaImageUrl from '../assets/Bandana.png';
+// import bandanaImageUrl from '../assets/Bandana.png'; // Remove unused import
 import glassesImageUrl from '../assets/Glasses.png';
 import hatImageUrl from '../assets/Hat.png';
 import bowtieImageUrl from '../assets/Bowtie.png';
