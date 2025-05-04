@@ -124,7 +124,9 @@ const LeftPanel = styled.div<{ customization: DogCustomization; isCollapsed: boo
   flex-shrink: 0;
   position: relative; /* Keep relative if needed for other internal positioning */
   width: ${props => props.isCollapsed ? '0' : '280px'}; /* Control width based on state */
-  overflow: hidden; /* Hide content when collapsed */
+  /* overflow: hidden; */ /* Hide content when collapsed */
+  overflow-y: auto; /* Allow vertical scrolling */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
   background-color: ${props => getBackgroundColorForBreed(props.customization.breed)}; 
   /* Ensure DogCustomizer internal bg doesn't conflict or set it transparent */
   transition: width 0.3s ease, background-color 0.3s ease;
@@ -133,7 +135,7 @@ const LeftPanel = styled.div<{ customization: DogCustomization; isCollapsed: boo
     position: fixed; /* Take out of flow */
     top: 0;
     left: 0;
-    height: calc(100% - 140px); /* Stop above graph */
+    height: calc(81.5%); /* Stop above graph */
     z-index: 40; /* Below toggle button */
     /* Adjust width for mobile overlay */
     width: ${props => props.isCollapsed ? '0' : '72%'}; 

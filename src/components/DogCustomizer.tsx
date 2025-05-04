@@ -55,8 +55,8 @@ const PanelContainer = styled.div`
   padding: 1.5rem;
   background-color: transparent;
   /* box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05); */
-  height: 100vh;
-  overflow-y: auto;
+  /* height: 100vh; */ /* Remove fixed height */
+  /* overflow-y: auto; */ /* Remove internal scroll */
   border-right: 1px solid rgba(0, 0, 0, 0.08);
 `;
 
